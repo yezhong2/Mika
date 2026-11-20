@@ -196,7 +196,7 @@ internal fun ComputerAccessPage(
     }
 }
 
-/** 监听端口的编辑:默认 8765 一个快捷项,别的口在输入框里填(1024–65535)。 */
+/** 监听端口的编辑:默认 8766 一个快捷项,别的口在输入框里填(1024–65535)。 */
 @Composable
 private fun PortDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
     var custom by remember { mutableStateOf(if (current != McpSettings.DEFAULT_PORT) current.toString() else "") }
