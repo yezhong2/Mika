@@ -151,6 +151,21 @@ A saved turn includes `verified` only when a review actually ran. Older records 
 
 Only `offset` and `limit` query parameters are accepted. Pages default to 20 items, up to 50; body pages default to and allow at most 3,000 characters. A null `next_offset` ends pagination. Long conversation text and event excerpts report `text_truncated` or `truncated`. History reads do not register phone tasks in the remote control index or allow answering, steering or cancelling them.
 
+## Scheduling from an external script (broadcast)
+
+An external script can queue a scheduled task without a computer, after the owner enables “Allow external scripts to schedule tasks” in phone settings (off by default, at most 5 accepted per minute).
+
+The intent **must name the component**. Since targetSdk 26, manifest-registered implicit broadcasts are not delivered, so an action-only call fails silently.
+
+```bash
+am broadcast -n <package>/com.wangzan101.mika.task.ExternalScheduleReceiver \
+   -a <package>.SCHEDULE --es prompt "remind me about the power bill tomorrow at 9" --es at 2026-11-21T09:00:00+08:00
+```
+
+- The action is `<package>.SCHEDULE`: `com.wangzan101.mika.SCHEDULE` for the official build and `com.yezhong2.mika.SCHEDULE` for the fork; with both installed only the named package receives it.
+- The class in the component is always `com.wangzan101.mika.task.ExternalScheduleReceiver` (the Kotlin package, which does not follow the install ID); only the package before the slash changes.
+- `at` may be omitted, which runs the task immediately. Rejections are logged under the `MikaExternal` tag and are not reported back to the broadcaster.
+
 ## Development checks
 
 ```bash
