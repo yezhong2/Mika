@@ -16,11 +16,15 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.wangzan101.mika"
+        // 复刻版用自己的安装标识：和官方 com.wangzan101.mika 并存，互不覆盖。
+        // 注意 namespace 仍是 com.wangzan101.mika（Kotlin 包名，全仓 1000+ 文件），
+        // applicationId 与 namespace 本来就允许不同。
+        applicationId = "com.yezhong2.mika"
         minSdk = 29
         targetSdk = 35
-        versionCode = 50
-        versionName = "0.1.49"
+        // 自己的版本线：从 1 起，不再跟上游（上游是 50 / 0.1.49，闭源发版才 bump）。
+        versionCode = 1
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
