@@ -18,6 +18,15 @@ import kotlinx.coroutines.launch
 /**
  * 外部脚本经广播(<包名>.SCHEDULE)建定时任务的入口。动作名按包名派生，
  * 官方版和复刻版同时装时各收各的，不会一条广播两边都建任务。
+ *
+ * **必须显式指定组件**：targetSdk>=26 之后，manifest 里声明的隐式广播收不到
+ * （自定义 action 也在限制内），只写 -a 的调用会静默无效。正确写法：
+ *
+ *     am broadcast -n <包名>/com.wangzan101.mika.task.ExternalScheduleReceiver \
+ *        -a <包名>.SCHEDULE --es prompt "..." [--es at 2026-01-01T09:00:00+08:00]
+ *
+ * 注意组件里的**类名固定是 com.wangzan101.mika.task.ExternalScheduleReceiver**
+ * （Kotlin 包名不随 applicationId 变），只有前半段的包名跟着安装标识走。
  * 广播是 fire-and-forget,没有返回值:拒绝原因写进 logcat,绝不静默排队。
  */
 object ExternalSchedule {
