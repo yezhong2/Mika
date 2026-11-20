@@ -14,6 +14,7 @@ import android.os.Looper
 import android.os.Process
 import android.provider.Settings
 import android.util.Log
+import com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility
 import com.wangzan101.mika.core.adb.AdbConnectPort
 import com.wangzan101.mika.core.adb.AdbConnection
 import com.wangzan101.mika.core.adb.ConnectCandidates
@@ -101,13 +102,23 @@ class BuiltinShellManager(context: Context, private val hub: HelperHub, private 
     @Volatile var lastHelperLaunchStage: String? = null
         private set
 
-    /** 要起助手时替用户打开无线调试:只由 App 自己写系统设置(要起助手时没有别的连接可用)。 */
+    /**
+     * 要起助手时替用户打开无线调试(要起助手时没有别的连接可用)。两条路:
+     * ①App 自己写系统设置——要 WRITE_SECURE_SETTINGS,那是开发权限,设置界面授不了,只能连上后由 Mika 用 shell 身份 pm grant 补;
+     * ②用 Mika 的无障碍服务去点系统设置里的开关——不吃任何授权(2026-11-20 加:没有它时①在无线调试被系统关掉后会永远补不上授权)。
+     */
     val wirelessAutoOn: WirelessDebuggingAutoOn by lazy {
         WirelessDebuggingAutoOn(
             wants = { consent().wants(RecoveryCapability.AutoWirelessDebugging) },
-            canWrite = { app.checkSelfPermission(PermissionCommands.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED },
+            canWrite = {
+                app.checkSelfPermission(PermissionCommands.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED ||
+                    ScreenAccessibility.instance.value != null
+            },
             read = platform::wirelessDebugging,
-            write = { DeveloperSettings.turnOnWirelessDebugging(app.contentResolver) },
+            write = {
+                DeveloperSettings.turnOnWirelessDebugging(app.contentResolver) ||
+                    WirelessDebuggingScreenOn.turnOn(app) { DeveloperSettings.wirelessDebugging(app.contentResolver) }
+            },
         )
     }
 
