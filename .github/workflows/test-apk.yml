@@ -43,7 +43,7 @@ jobs:
           {
             printf '%s\n' '## Mika Perf APK'
             printf '%s\n' 'Download the Mika-Dev artifact below, unzip it, and install the APK.'
-            printf '%s\n' 'Package: com.wangzan101.mika. Signed with the debug key; uninstall any existing Mika (different signature) first.'
+            printf '%s\n' 'Package: com.yezhong2.mika (fork build, debug-signed). It installs alongside the official Mika; configure model and phone permissions separately.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test APK
         uses: actions/upload-artifact@v7
