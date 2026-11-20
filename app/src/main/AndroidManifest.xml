@@ -405,7 +405,8 @@
             android:name=".task.ExternalScheduleReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.wangzan101.mika.SCHEDULE" />
+                <!-- 按 applicationId 派生：官方版和复刻版各收各的，两个都装也不会一条广播建两份任务 -->
+                <action android:name="${applicationId}.SCHEDULE" />
             </intent-filter>
         </receiver>
         <receiver android:name=".teach.TeachReceiver" android:exported="false" />
