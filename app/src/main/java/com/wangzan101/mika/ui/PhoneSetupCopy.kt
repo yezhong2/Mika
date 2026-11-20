@@ -105,6 +105,8 @@ object PhoneSetupCopy {
     val OPEN_HEADS_UP: String get() = tr(R.string.heads_up_action)
     val MANUAL_TOGGLE: String get() = tr(R.string.phone_manual_toggle)
     val MANUAL_HINT: String get() = tr(R.string.phone_manual_hint)
+    /** 输入框已经摊开时那行小字变成「收起」。 */
+    val MANUAL_HIDE: String get() = tr(R.string.phone_manual_hide)
     val CODE_LABEL: String get() = tr(R.string.phone_code_label)
     val PORT_LABEL: String get() = tr(R.string.phone_port_label)
     val PORT_HINT: String get() = tr(R.string.phone_port_hint)
