@@ -509,7 +509,7 @@ private fun CurrentStepBody(
     if (a11y && view.showAppInfo) PillButton(PhoneSetupCopy.APP_INFO, primary = false, tag = "setup-app-info", onClick = onAppInfo)
     // 读到的开关只是参考:用户说打开了就往下走,哪一步都不会卡死
     if (step in PhoneSetupFlow.CONFIRMABLE) PillButton(PhoneSetupCopy.TURNED_ON_NEXT, primary = false, tag = "setup-confirm") { onConfirmStep(step) }
-    if (step == SetupStep.PairingCode) ManualCode(askPort = !view.portFound, onSubmit = onSubmit)
+    if (step == SetupStep.PairingCode) ManualCode(askPort = !view.portFound, showByDefault = !view.autoRead, onSubmit = onSubmit)
     if (view.revisiting) LinkText(PhoneSetupCopy.REVISIT_BACK, "setup-revisit-back") { onRevisit(null) }
 }
 
@@ -563,13 +563,17 @@ private fun NotifyGuide() {
 
 /** 通知没弹出来时的兜底:在 App 里直接填码(找不到配对窗口时连带填端口)。 */
 @Composable
-private fun ManualCode(askPort: Boolean, onSubmit: (String, Int?) -> Unit) {
-    var open by rememberSaveable { mutableStateOf(false) }
+private fun ManualCode(askPort: Boolean, showByDefault: Boolean, onSubmit: (String, Int?) -> Unit) {
+    // 2026-11-20：无障碍没开时**默认把输入框摊开**。原来折在「通知没出来?在这里填」小字后面，
+    // 在配对窗口拿到 6 位码后回 App 找不到填的地方（通知兜底又被系统通知权限拦掉）＝「没有输入配对码的地方」。
+    // 无障碍开着（Mika 自己读码）时仍默认收起，不占版面。
+    var open by rememberSaveable(showByDefault) { mutableStateOf(showByDefault) }
     var code by rememberSaveable { mutableStateOf("") }
     var port by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     Text(
-        PhoneSetupCopy.MANUAL_TOGGLE, Modifier.padding(top = 8.dp).clickable { open = !open }.padding(vertical = 4.dp).testTag("setup-manual"),
+        if (open) PhoneSetupCopy.MANUAL_HIDE else PhoneSetupCopy.MANUAL_TOGGLE,
+        Modifier.padding(top = 8.dp).clickable { open = !open }.padding(vertical = 4.dp).testTag("setup-manual"),
         style = MikaType.Caption, color = MikaTheme.colors.accent,
     )
     if (!open) return
