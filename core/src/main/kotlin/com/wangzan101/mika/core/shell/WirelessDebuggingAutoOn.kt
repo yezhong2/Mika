@@ -1,5 +1,6 @@
 package com.wangzan101.mika.core.shell
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,7 +60,8 @@ class WirelessDebuggingAutoOn(
     /** 系统的无线调试开关;读不到为 null。 */
     private val read: () -> Boolean?,
     /** 把无线调试开关写成打开;系统不让写时返回 false 或抛异常。 */
-    private val write: () -> Boolean,
+    /** 把无线调试开关写成打开;写不了返回 false。挂起:没有系统设置授权时这里要走无障碍点系统设置界面。 */
+    private val write: suspend () -> Boolean,
     private val now: () -> Long = System::currentTimeMillis,
     private val settleMs: Long = SETTLE_MS,
     private val pollMs: Long = POLL_MS,
@@ -89,7 +91,13 @@ class WirelessDebuggingAutoOn(
             lastWriteAt = now()
         }
         try {
-            val accepted = runCatching(write).getOrDefault(false)
+            val accepted = try {
+                write()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
             if (!accepted || read() == false) return false.also { block(if (accepted) AutoOnBlock.NotAllowedHere else AutoOnBlock.Refused) }
             var waited = 0L
             while (waited < settleMs) {
