@@ -45,6 +45,12 @@ class AdbConnectPort(
     private val scan: LocalPortScan? = null,
     /** 用户这次填的端口;没填为 null。 */
     private val manual: () -> Int? = { null },
+    /**
+     * 从系统「无线调试」页上直接读到的地址和端口(无障碍那一路,2026-11-20 加)。
+     * 为什么要有:那个设置值会骗人——Honor 上它一直是 1,而 adbd 其实没在监听,盲扫也扫不到;
+     * 页面上「IP 地址和端口」才是真的。放在扫端口之前试,它比扫出来的准。
+     */
+    private val extra: suspend () -> List<AdbEndpoint> = { emptyList() },
     /** 开始、结束扫本机端口时各报一次(界面显示「正在本机查找…」)。 */
     private val scanning: (Boolean) -> Unit = {},
     private val localHost: String = LOCALHOST,
@@ -63,6 +69,7 @@ class AdbConnectPort(
             { local(cache.load()) },
             { local(property()) },
             { finder.findPorts(AdbServiceTypes.CONNECT, mdnsTimeoutMs).map { AdbEndpoint(localHost, it) } },
+            { extra() },
             {
                 if (scan == null || manualPort != null || rejected != null) emptyList() else {
                     scanning(true)
