@@ -16,6 +16,8 @@ import android.provider.Settings
 import android.util.Log
 import com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility
 import com.wangzan101.mika.core.adb.AdbConnectPort
+import com.wangzan101.mika.core.adb.AdbConnectionException
+import com.wangzan101.mika.core.adb.AdbEndpoint
 import com.wangzan101.mika.core.adb.AdbConnection
 import com.wangzan101.mika.core.adb.ConnectCandidates
 import com.wangzan101.mika.core.adb.AdbPairing
@@ -334,10 +336,28 @@ class BuiltinShellManager(context: Context, private val hub: HelperHub, private 
             }
         }
 
-        suspend fun connect(tls: AdbTls = AndroidAdb.tls(AndroidAdb.identity(app))): AdbConnection =
-            AdbConnectPort(
-                ::tlsPort, finder, portCache, report = candidates, scan = scan, manual = { manualPort.getAndSet(null) }, scanning = scanning,
-            ).connect { host, port -> AdbConnection.open(host, port, tls) }
+        /**
+         * 连一次。2026-11-20 加两件事,都是主人现场逼出来的(配对窗口里显示已连接、一退出就断):
+         * ①候选来源多一路——无障碍读系统「无线调试」页上的「IP 地址和端口」,设置值和盲扫都可能撒谎,页面不会;
+         * ②一个候选都连不上(no wireless debugging port found)时,把无线调试关掉再打开一次(有端口的页面才拨得动),
+         *   再连一遍——Honor 上设置写着 1 但 adbd 已经没了,不重启它永远连不上。
+         */
+        suspend fun connect(tls: AdbTls = AndroidAdb.tls(AndroidAdb.identity(app))): AdbConnection {
+            fun one() = AdbConnectPort(
+                ::tlsPort, finder, portCache, report = candidates, scan = scan, manual = { manualPort.getAndSet(null) },
+                scanning = scanning,
+                extra = {
+                    WirelessDebuggingScreenOn.readEndpoint(app)?.let { (host, port) -> listOf(AdbEndpoint(host, port)) }.orEmpty()
+                },
+            )
+            return try {
+                one().connect { host, port -> AdbConnection.open(host, port, tls) }
+            } catch (e: AdbConnectionException) {
+                if (e.reason != AdbConnectionException.Reason.CONNECT_FAILED) throw e
+                if (!WirelessDebuggingScreenOn.restart(app) { wirelessDebugging() }) throw e
+                one().connect { host, port -> AdbConnection.open(host, port, tls) }
+            }
+        }
 
         /** 扫端口时只扫本机自己:127.0.0.1 和 Wi-Fi 上的 IPv4 地址。 */
         private fun localHosts(): List<String> = listOf(LOCALHOST) + runCatching {
