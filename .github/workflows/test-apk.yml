@@ -30,8 +30,32 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
-      - name: Unit tests and independent test APK
-        run: ./gradlew :app:assemblePerf --stacktrace
+      # 固定签名：runner 自带的 debug.keystore 每次都不一样，两次出包互盖不上。
+      # 没配 secret 时这一步不改任何东西，构建照旧走 debug 签名。
+      - name: Decode signing keystore
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.MIKA_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/mika.jks"
+            echo "用固定 keystore 签名（MIKA_KEYSTORE）"
+          else
+            echo "没配 MIKA_KEYSTORE_B64，本次用 runner 的临时 debug 签名"
+          fi
+      - name: Build APK
+        shell: bash
+        env:
+          MIKA_KEYSTORE_PASSWORD: ${{ secrets.MIKA_KEYSTORE_PASSWORD }}
+          MIKA_KEY_ALIAS: ${{ secrets.MIKA_KEY_ALIAS }}
+          MIKA_KEY_PASSWORD: ${{ secrets.MIKA_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/mika.jks" ]; then
+            export MIKA_KEYSTORE="$RUNNER_TEMP/mika.jks"
+          fi
+          ./gradlew :app:assemblePerf --stacktrace
       - name: Prepare download
         shell: bash
         run: |
