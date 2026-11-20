@@ -48,6 +48,7 @@
     <string name="phone_need_notif">The pairing code goes into a notification, so allow Mika’s notifications first.</string>
     <string name="phone_heads_up_lowered">“Needs you” and “Task results” notifications won’t pop up now, so you may miss when you’re needed. You can continue, or turn them on now.</string>
     <string name="phone_manual_toggle">No notification? Enter it here</string>
+    <string name="phone_manual_hide">Hide</string>
     <string name="phone_manual_hint">The pairing window closes when you leave it. Use split screen to see the code and type here at the same time.</string>
     <string name="phone_code_label">6-digit pairing code</string>
     <string name="phone_port_label">The number after the colon in “IP address &amp; port” in the pairing window</string>
