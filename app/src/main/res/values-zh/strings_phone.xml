@@ -48,6 +48,7 @@
     <string name="phone_need_notif">配对码要在通知里填，先允许 Mika 发通知。</string>
     <string name="phone_heads_up_lowered">「需要你处理」和「任务结果」的通知现在不会弹出，要你接手时容易错过。可以先继续，也可以现在就去打开。</string>
     <string name="phone_manual_toggle">通知没出来?在这里填</string>
+    <string name="phone_manual_hide">收起</string>
     <string name="phone_manual_hint">离开配对窗口它就会关掉。可以用分屏,一边看配对码一边在这里填。</string>
     <string name="phone_code_label">6 位配对码</string>
     <string name="phone_port_label">配对窗口里「IP 地址和端口」冒号后面的数字</string>
