@@ -151,6 +151,21 @@ mika ui --device SERIAL --no-open
 
 各接口只接受 `offset`、`limit`。默认每页 20 项，最多 50 项；正文默认且最多每页 3,000 个字符。`next_offset` 为 null 表示已到末页。长对话文本和运行事件的展示节选分别带 `text_truncated` 或 `truncated`。历史读取不把手机任务加入远程控制索引，不能用它的编号去回答、追加或取消手机任务。
 
+## 外部脚本建任务（广播）
+
+外部脚本可以不经电脑直接给手机建一条定时任务（先在手机设置里打开「允许外部脚本建任务」，默认关，每分钟最多接 5 条）。
+
+**必须显式指定组件**：targetSdk 26 起，manifest 里登记的隐式广播收不到，只写 `-a` 的调用会静默无效。
+
+```bash
+am broadcast -n <包名>/com.wangzan101.mika.task.ExternalScheduleReceiver \
+   -a <包名>.SCHEDULE --es prompt "明天九点提醒我看电费" --es at 2026-11-21T09:00:00+08:00
+```
+
+- 动作名是 `<包名>.SCHEDULE`：官方包是 `com.wangzan101.mika.SCHEDULE`，复刻包是 `com.yezhong2.mika.SCHEDULE`；两个同时装也只有被点名的那一个会收到。
+- 组件里的类名固定是 `com.wangzan101.mika.task.ExternalScheduleReceiver`（Kotlin 包名，不随安装标识变），只有斜杠前的包名跟着安装标识走。
+- `at` 可省，缺省立即执行。被拒的原因只写 logcat（tag `MikaExternal`），不回传到广播结果。
+
 ## 开发验证
 
 ```bash
