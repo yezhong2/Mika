@@ -16,11 +16,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * 外部脚本经广播(com.wangzan101.mika.SCHEDULE)建定时任务的入口。
+ * 外部脚本经广播(<包名>.SCHEDULE)建定时任务的入口。动作名按包名派生，
+ * 官方版和复刻版同时装时各收各的，不会一条广播两边都建任务。
  * 广播是 fire-and-forget,没有返回值:拒绝原因写进 logcat,绝不静默排队。
  */
 object ExternalSchedule {
-    const val ACTION = "com.wangzan101.mika.SCHEDULE"
+    /** 动作名按包名派生：com.wangzan101.mika → com.wangzan101.mika.SCHEDULE，复刻版同理。 */
+    fun actionOf(context: Context): String = context.packageName + ".SCHEDULE"
 
     /** 每分钟最多接几条;超过直接拒绝,不排队。 */
     private const val LIMIT_PER_MINUTE = 5
@@ -89,7 +91,7 @@ object ExternalSchedule {
 /** 接外部脚本的广播:prompt 必填,at 可选(ISO 8601 带时区,缺省立即执行)。 */
 class ExternalScheduleReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ExternalSchedule.ACTION) return
+        if (intent.action != ExternalSchedule.actionOf(context)) return
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
