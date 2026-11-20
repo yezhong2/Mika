@@ -2,8 +2,6 @@ name: Mika Dev APK
 
 # Build the owner's feature branch without requiring a PR or a main-branch push.
 on:
-  push:
-    branches: [feat/capsule-controls]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +13,7 @@ concurrency:
 
 jobs:
   apk:
-    name: Build and upload Mika Dev
+    name: Build and upload Mika Perf
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -33,24 +31,24 @@ jobs:
         with:
           cache-provider: basic
       - name: Unit tests and independent test APK
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug -PdevInstall --stacktrace
+        run: ./gradlew :app:assemblePerf --stacktrace
       - name: Prepare download
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p dist/test-apk
-          task_apk_name="Mika-Dev-${GITHUB_SHA::7}.apk"
-          cp app/build/outputs/apk/debug/app-debug.apk "dist/test-apk/${task_apk_name}"
+          task_apk_name="Mika-Perf-${GITHUB_SHA::7}.apk"
+          cp app/build/outputs/apk/perf/app-perf.apk "dist/test-apk/${task_apk_name}"
           (cd dist/test-apk && sha256sum *.apk > SHA256SUMS.txt)
           {
-            printf '%s\n' '## Mika Dev test APK'
+            printf '%s\n' '## Mika Perf APK'
             printf '%s\n' 'Download the Mika-Dev artifact below, unzip it, and install the APK.'
-            printf '%s\n' 'Package: com.wangzan101.mika.dev. It installs alongside Mika; configure its model and phone permissions separately.'
+            printf '%s\n' 'Package: com.wangzan101.mika. Signed with the debug key; uninstall any existing Mika (different signature) first.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload test APK
         uses: actions/upload-artifact@v7
         with:
-          name: Mika-Dev-${{ github.sha }}
+          name: Mika-Perf-${{ github.sha }}
           path: dist/test-apk/
           if-no-files-found: error
           retention-days: 14
@@ -59,7 +57,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: Mika-Dev-test-results-${{ github.sha }}
+          name: Mika-Perf-test-results-${{ github.sha }}
           path: |
             app/build/test-results/testDebugUnitTest/
             app/build/reports/tests/testDebugUnitTest/
