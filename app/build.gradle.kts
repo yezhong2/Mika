@@ -23,8 +23,9 @@ android {
         minSdk = 29
         targetSdk = 35
         // 自己的版本线：从 1 起，不再跟上游（上游是 50 / 0.1.49，闭源发版才 bump）。
-        versionCode = 1
-        versionName = "1.0.0"
+        // 每出一次包就 +1 —— 内容变了而版本号不变，出问题就分不出是哪一版。
+        versionCode = 2
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false
