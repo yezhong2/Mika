@@ -91,7 +91,11 @@ class McpSettings(private val dir: File, private val cipher: KeyCipher, private 
     }
 
     companion object {
-        const val DEFAULT_PORT = 8765
+        /**
+         * 默认监听端口。复刻版（com.yezhong2.mika）可能和官方版同时装，
+         * 都挤 8765 会让后启动的那个 bind 失败（EADDRINUSE），所以复刻版挪到 8766。
+         */
+        const val DEFAULT_PORT = 8766
         /** 端口允许的范围;读取和写入同一套。 */
         val PORT_RANGE = 1024..65535
         private const val MIN_TOKEN = 32
