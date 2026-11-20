@@ -59,6 +59,22 @@ android {
     // 评测任务集(仓库根目录 eval/tasks)打进测试包的 assets,真机评测跑器从那里读题
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("eval/tasks"))
 
+    // 固定签名：GitHub runner 每次生成的 debug.keystore 都不一样，两次出包互相盖不上
+    // （INSTALL_FAILED_UPDATE_INCOMPATIBLE，只能卸载重装、数据全丢）。
+    // CI 里把固定 keystore 存成 Actions secret，解到 $RUNNER_TEMP 后用环境变量传进来；
+    // 本地没配这几个变量就退回原来的 debug 签名，行为不变。
+    signingConfigs {
+        val storePath = System.getenv("MIKA_KEYSTORE")
+        if (!storePath.isNullOrBlank()) {
+            create("fork") {
+                storeFile = file(storePath)
+                storePassword = System.getenv("MIKA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MIKA_KEY_ALIAS")
+                keyPassword = System.getenv("MIKA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         // 真机验收时并排安装,保留发行版和用户数据;默认构建标识不变。
         if (providers.gradleProperty("devInstall").isPresent) getByName("debug") {
@@ -69,7 +85,8 @@ android {
         // 用本机调试签名,能直接覆盖调试包、保留数据;可被性能工具采样。./gradlew :app:assemblePerf
         create("perf") {
             initWith(getByName("release"))
-            signingConfig = signingConfigs.getByName("debug")
+            // 有固定 keystore（CI secret）就用它，否则退回本机 debug 签名
+            signingConfig = signingConfigs.findByName("fork") ?: signingConfigs.getByName("debug")
             isProfileable = true
             matchingFallbacks += "release"
             // 真机比较滑动手感也用优化包,仍覆盖 .dev 测试版并保留它的数据。
